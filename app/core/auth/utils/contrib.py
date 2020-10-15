@@ -10,12 +10,11 @@ from fastapi import HTTPException, Security
 from fastapi.security import OAuth2PasswordBearer
 from jwt import PyJWTError
 from jwt.exceptions import InvalidTokenError
-from starlette.status import HTTP_403_FORBIDDEN
+from starlette import status
 
 from app.applications.users.models import User
 from app.core.auth.schemas import JWTTokenPayload, CredentialsSchema
 from app.core.auth.utils import password
-from app.core.auth.utils.jwt import ALGORITHM
 from app.settings.config import settings
 
 password_reset_jwt_subject = "passwordreset"
@@ -108,16 +107,19 @@ def verify_password_reset_token(token) -> Optional[str]:
 
 
 async def get_current_user(token: str = Security(reusable_oauth2)) -> Optional[User]:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="无法验证凭据",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         token_data = JWTTokenPayload(**payload)
     except PyJWTError:
-        raise HTTPException(
-            status_code=HTTP_403_FORBIDDEN, detail="Could not validate credentials"
-        )
+        raise credentials_exception
     user = await User.get(id=token_data.user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    if user is None:
+        raise credentials_exception
     return user
 
 
@@ -133,6 +135,31 @@ async def get_current_active_superuser(current_user: User = Security(get_current
             status_code=400, detail="The user doesn't have enough privileges"
         )
     return current_user
+
+
+async def authenticate_user(username: str, _password: str):
+    """
+    获取登录的用户
+    :param fake_db:
+    :param username:
+    :param password:
+    :return:
+    """
+    if not username:
+        return None
+    user = await User.get_by_username(username)
+
+    verified, updated_password_hash = password.verify_and_update_password(
+        _password, user.password_hash
+    )
+
+    if not verified:
+        return None
+        # Update password hash to a more robust one if needed
+    if updated_password_hash is not None:
+        user.password_hash = updated_password_hash
+        await user.save()
+    return user
 
 
 async def authenticate(credentials: CredentialsSchema) -> Optional[User]:

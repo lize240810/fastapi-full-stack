@@ -4,11 +4,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 
+from app.applications.users.routes import router as users_router
+from app.applications.users.views import UserViewSet
+from app.core.auth.routers.login import router as login_router
 from app.core.exceptions import APIException, on_api_exception
 from app.settings.config import settings
 from app.settings.log import DEFAULT_LOGGING
-from app.core.auth.routers.login import router as login_router
-from app.applications.users.routes import router as users_router
 
 
 def configure_logging(log_settings: dict = None):
@@ -33,7 +34,9 @@ def get_app_list():
 
 def get_tortoise_config() -> dict:
     app_list = get_app_list()
+    app_list.append('app.fastapi_admin.models')
     app_list.append('aerich.models')
+
     config = {
         'connections': settings.DB_CONNECTIONS,
         'apps': {
@@ -52,7 +55,9 @@ TORTOISE_ORM = get_tortoise_config()
 def register_db(app: FastAPI, db_url: str = None):
     db_url = db_url or settings.DB_URL
     app_list = get_app_list()
+    app_list.append('app.fastapi_admin.models')
     app_list.append('aerich.models')
+
     register_tortoise(
         app,
         db_url=db_url,
@@ -67,5 +72,6 @@ def register_exceptions(app: FastAPI):
 
 
 def register_routers(app: FastAPI):
-    app.include_router(login_router, prefix='/api/auth/login')
-    app.include_router(users_router, prefix='/api/auth/users')
+    app.include_router(login_router, prefix='/api/auth/login', tags=["登录"])
+    app.include_router(users_router, prefix='/api/auth/users', tags=["用户"])
+    app.include_router(UserViewSet(), prefix='/api/users', tags=["用户1"])

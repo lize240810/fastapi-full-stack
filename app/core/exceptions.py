@@ -8,9 +8,11 @@ class SettingNotFound(Exception):
 
 class APIException(Exception):
     """
-    Инстанциирование объекта исключения приводит к формированию
-    респонса с кодом status_code, кодом error_code,
-    и сообщениями message и detail(опционально).
+    实例化异常对象导致形成
+
+    以status_code，error_code，
+
+    以及消息和详细消息（可选）。
     """
     def __init__(self,
                  error_code: int = 000,

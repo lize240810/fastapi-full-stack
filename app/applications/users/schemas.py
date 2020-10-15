@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
-from typing import Optional, TypeVar
+from typing import Optional
 
+from freddie.schemas import Schema
 from pydantic import BaseModel, EmailStr, UUID4, validator
 
 
@@ -20,7 +21,7 @@ class BaseProperties(BaseModel):
         return self.dict(exclude_unset=True, exclude={"id"})
 
 
-class BaseUser(BaseProperties):
+class BaseUser(BaseProperties, Schema):
     first_name: Optional[str]
     last_name: Optional[str]
     hashed_id: Optional[UUID4] = None
@@ -51,7 +52,7 @@ class BaseUserUpdate(BaseProperties):
 class BaseUserDB(BaseUser):
     id: int
     hashed_id: UUID4
-    password_hash: str
+    password: str
     updated_at: datetime
     last_login: Optional[datetime]
 
