@@ -1,2 +1,3 @@
-# FastAPI_template, Fastapi, freddie 的一个项目整合
-## 开箱即用 
+# FastAPI_template, Fastapi, freddie 的一个项目整合模版
+
+ 

@@ -73,5 +73,5 @@ def register_exceptions(app: FastAPI):
 
 def register_routers(app: FastAPI):
     app.include_router(login_router, prefix='/api/auth/login', tags=["登录"])
-    app.include_router(users_router, prefix='/api/auth/users', tags=["用户"])
+    # app.include_router(users_router, prefix='/api/auth/users', tags=["用户"])
     app.include_router(UserViewSet(), prefix='/api/users', tags=["用户1"])

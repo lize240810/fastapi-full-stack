@@ -2,7 +2,7 @@ from typing import List
 
 from fastapi import Depends, HTTPException
 from freddie import ViewSet
-from freddie.viewsets import FieldedViewset, PaginatedListViewset, route
+from freddie.viewsets import FieldedViewset, PaginatedListViewset, route, FilterableListViewset
 
 from app.applications.users.models import User
 from app.applications.users.schemas import BaseUser, BaseUserOut, BaseUserUpdate
@@ -13,6 +13,7 @@ from app.core.auth.utils.password import get_password_hash
 class UserViewSet(
     FieldedViewset,
     PaginatedListViewset,
+    FilterableListViewset,
     ViewSet
 ):
     """
@@ -25,10 +26,14 @@ class UserViewSet(
         default_limit = 10
         max_limit = 100
 
+    class Filter:
+        username: str = None
+
     def get_openapi_tags(self) -> List[str]:
         return []
 
-    async def list(self, *, paginator, fields, request, current_user: User = Depends(get_current_active_user)):
+    async def list(self, *, filter_by, paginator, fields, request, current_user: User = Depends(get_current_active_user)):
+        print(filter_by, "筛选字段")
         users = await User.all().limit(paginator.limit).offset(paginator.offset)
         return users
 

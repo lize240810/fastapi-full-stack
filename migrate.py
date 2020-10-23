@@ -1,4 +1,4 @@
 import os
 
-os.system('alembic revision --autogenerate -m "init db"')
-os.system('alembic upgrade head')
+os.system('aerich migrate --name drop_column')
+os.system('aerich upgrade')
